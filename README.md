@@ -43,12 +43,18 @@ Add to `.mcp.json`:
 
 ## Operator Setup (Codex + Claude Code)
 
-Use this baseline for local environments where MCP repos live under `/Volumes/Data/_ai/_mcp` and persistent MCP data lives under `/Volumes/Data/_ai/mcp-data`.
+Path placeholders used in this section:
+
+- `<MCP_STUFF_ROOT>` (example: `/Volumes/Data/_ai/_mcp/mcp_stuff`)
+- `<MCP_BASE>` (example: `/Volumes/Data/_ai/_mcp`)
+- `<MCP_DATA_ROOT>` (example: `/Volumes/Data/_ai/mcp-data`)
+
+Use this baseline for local environments where MCP repos live under `<MCP_BASE>` and persistent MCP data lives under `<MCP_DATA_ROOT>`.
 
 ### Required Data Root Policy
 
-- Store MCP runtime data under `/Volumes/Data/_ai/mcp-data`.
-- For each MCP sourced from `/Volumes/Data/_ai/_mcp/<name>`, use a matching data dir such as `/Volumes/Data/_ai/mcp-data/<name>`.
+- Store MCP runtime data under `<MCP_DATA_ROOT>`.
+- For each MCP sourced from `<MCP_BASE>/<name>`, use a matching data dir such as `<MCP_DATA_ROOT>/<name>`.
 - Do not use repo folders or `$HOME` as the primary persistent runtime store when a managed data root is expected.
 
 ### Codex User-Scope MCP Example
@@ -58,7 +64,7 @@ Use this baseline for local environments where MCP repos live under `/Volumes/Da
 ```toml
 [mcp_servers.owlex]
 command = "bash"
-args = ["-lc", "mkdir -p /Volumes/Data/_ai/mcp-data/owlex && cd /Volumes/Data/_ai/_mcp/mcp_stuff/owlex && exec uv run owlex-server"]
+args = ["-lc", "mkdir -p <MCP_DATA_ROOT>/owlex && cd <MCP_STUFF_ROOT>/owlex && exec uv run owlex-server"]
 ```
 
 ### Claude Code User-Scope MCP Example
@@ -73,7 +79,7 @@ args = ["-lc", "mkdir -p /Volumes/Data/_ai/mcp-data/owlex && cd /Volumes/Data/_a
       "command": "bash",
       "args": [
         "-lc",
-        "mkdir -p /Volumes/Data/_ai/mcp-data/owlex && cd /Volumes/Data/_ai/_mcp/mcp_stuff/owlex && exec uv run owlex-server"
+        "mkdir -p <MCP_DATA_ROOT>/owlex && cd <MCP_STUFF_ROOT>/owlex && exec uv run owlex-server"
       ],
       "env": {}
     }
@@ -87,19 +93,19 @@ For local models in council, run AiChat against Ollama and keep config/data expl
 
 ```bash
 brew install aichat
-mkdir -p /Volumes/Data/_ai/mcp-data/owlex/aichat
+mkdir -p <MCP_DATA_ROOT>/owlex/aichat
 ```
 
 Example envs for Owlex MCP process:
 
 ```bash
-AICHAT_CONFIG_FILE=/Volumes/Data/_ai/_mcp/mcp_stuff/owlex/.aichat/config.yaml
+AICHAT_CONFIG_FILE=<MCP_STUFF_ROOT>/owlex/.aichat/config.yaml
 AICHAT_MODEL=ollama:qwen3-coder:latest
 ```
 
 ## README Maintenance Rule
 
-For any MCP repo under `/Volumes/Data/_ai/_mcp`, update `README.md` whenever:
+For any MCP repo under `<MCP_BASE>`, update `README.md` whenever:
 
 - setup steps change (Codex and Claude Code),
 - runtime paths/data-root behavior changes,

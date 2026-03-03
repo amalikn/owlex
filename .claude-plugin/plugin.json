@@ -17,7 +17,11 @@
   "mcpServers": {
     "owlex": {
       "command": "uvx",
-      "args": ["--from", "owlex", "owlex-server"]
+      "args": ["--from", "owlex", "owlex-server"],
+      "env": {
+        "AICHAT_CONFIG_FILE": "/Volumes/Data/_ai/_mcp/owlex/.aichat/config.yaml",
+        "AICHAT_MODEL": "ollama:qwen3-coder:latest"
+      }
     }
   }
 }

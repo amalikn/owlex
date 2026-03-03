@@ -1,0 +1,11 @@
+model: ollama:qwen3-coder:latest
+stream: true
+save: true
+
+clients:
+  - type: openai-compatible
+    name: ollama
+    api_base: http://127.0.0.1:11434/v1
+    models:
+      - name: qwen3-coder:latest
+        max_input_tokens: 131072

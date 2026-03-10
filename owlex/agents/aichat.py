@@ -10,6 +10,21 @@ from typing import Callable
 from ..config import config
 from .base import AgentRunner, AgentCommand
 
+_SENSITIVE_ENV_VARS = (
+    "OPENAI_API_KEY",
+    "OPENROUTER_API_KEY",
+    "CLAUDEOR_API_KEY",
+    "ANTHROPIC_API_KEY",
+    "GOOGLE_API_KEY",
+    "MISTRAL_API_KEY",
+    "GROQ_API_KEY",
+    "COHERE_API_KEY",
+    "AZURE_OPENAI_API_KEY",
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+    "AWS_SESSION_TOKEN",
+)
+
 
 def clean_aichat_output(raw_output: str, original_prompt: str = "") -> str:
     """Clean aichat output."""
@@ -58,6 +73,7 @@ class AiChatRunner(AgentRunner):
             output_prefix="AiChat Output",
             not_found_hint="Please ensure aichat is installed. See: https://github.com/sigoden/aichat",
             stream=True,
+            env_overrides=self._get_env_overrides(),
         )
 
     def build_resume_command(
@@ -89,7 +105,17 @@ class AiChatRunner(AgentRunner):
             output_prefix="AiChat Output",
             not_found_hint="Please ensure aichat is installed. See: https://github.com/sigoden/aichat",
             stream=False,  # Non-streaming for R2 consistency
+            env_overrides=self._get_env_overrides(),
         )
+
+    def _get_env_overrides(self) -> dict[str, str] | None:
+        """
+        Default-safe behavior: clear common credential env vars before spawning aichat.
+        Set AICHAT_ALLOW_ENV_CREDENTIALS=true to opt in to passthrough.
+        """
+        if config.aichat.allow_env_credentials:
+            return None
+        return {k: "" for k in _SENSITIVE_ENV_VARS}
 
     def get_output_cleaner(self) -> Callable[[str, str], str]:
         return clean_aichat_output

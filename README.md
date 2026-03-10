@@ -223,6 +223,8 @@ Council runs in the background. Start a query, keep working, check results later
 | `OPENROUTER_API_KEY` | `` | OpenRouter API key (enables ClaudeOR agent) |
 | `CLAUDEOR_MODEL` | `` | OpenRouter model for ClaudeOR (e.g., `deepseek/deepseek-v3.2`) |
 | `AICHAT_MODEL` | `` | Model for AiChat (e.g., `openrouter:minimax/minimax-m2.5`) |
+| `AICHAT_ENABLE_TOOLS` | `false` | If `true`, registers `start_aichat_session` and `resume_aichat_session` tools. |
+| `AICHAT_ALLOW_ENV_CREDENTIALS` | `false` | If `true`, pass parent credential env vars to aichat. Default behavior clears common API key env vars for safety. |
 
 ## Cost Notes
 

@@ -45,6 +45,8 @@ class AiChatConfig:
     """Configuration for aichat CLI integration."""
     model: str | None = None  # Model name (e.g., openai:gpt-4o, claude:claude-sonnet-4)
     clean_output: bool = True
+    allow_env_credentials: bool = False  # Pass parent-process credential env vars to aichat
+    enable_tools: bool = False  # Register start/resume aichat MCP tools
 
 
 @dataclass(frozen=True)
@@ -108,6 +110,8 @@ def load_config() -> OwlexConfig:
     aichat = AiChatConfig(
         model=os.environ.get("AICHAT_MODEL") or None,
         clean_output=os.environ.get("AICHAT_CLEAN_OUTPUT", "true").lower() == "true",
+        allow_env_credentials=os.environ.get("AICHAT_ALLOW_ENV_CREDENTIALS", "false").lower() == "true",
+        enable_tools=os.environ.get("AICHAT_ENABLE_TOOLS", "false").lower() == "true",
     )
 
     # Parse council exclude agents (comma-separated list)

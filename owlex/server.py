@@ -526,91 +526,94 @@ async def resume_claudeor_session(
 
 # === AiChat Tools ===
 
-@mcp.tool()
-async def start_aichat_session(
-    ctx: Context[ServerSession, None],
-    prompt: str = Field(description="The question or request to send"),
-    working_directory: str | None = Field(default=None, description="Working directory for aichat context"),
-) -> dict:
-    """
-    Start a new aichat session.
+if config.aichat.enable_tools:
+    @mcp.tool()
+    async def start_aichat_session(
+        ctx: Context[ServerSession, None],
+        prompt: str = Field(description="The question or request to send"),
+        working_directory: str | None = Field(default=None, description="Working directory for aichat context"),
+    ) -> dict:
+        """
+        Start a new aichat session.
 
-    Uses the aichat CLI for multi-provider LLM access. Configure model via
-    AICHAT_MODEL env var or aichat's own config file (~/.config/aichat/config.yaml).
-    """
-    if not prompt or not prompt.strip():
-        return TaskResponse(success=False, error="'prompt' parameter is required.", error_code=ErrorCode.INVALID_ARGS).model_dump()
+        Uses the aichat CLI for multi-provider LLM access. Configure model via
+        AICHAT_MODEL env var or aichat's own config file (~/.config/aichat/config.yaml).
+        By default, owlex clears common API credential env vars before launching aichat.
+        Set AICHAT_ALLOW_ENV_CREDENTIALS=true only when explicit credential passthrough is required.
+        """
+        if not prompt or not prompt.strip():
+            return TaskResponse(success=False, error="'prompt' parameter is required.", error_code=ErrorCode.INVALID_ARGS).model_dump()
 
-    working_directory, error = _validate_working_directory(working_directory)
-    if error:
-        return TaskResponse(success=False, error=error, error_code=ErrorCode.INVALID_ARGS).model_dump()
+        working_directory, error = _validate_working_directory(working_directory)
+        if error:
+            return TaskResponse(success=False, error=error, error_code=ErrorCode.INVALID_ARGS).model_dump()
 
-    task = engine.create_task(
-        command=f"{Agent.AICHAT.value}_exec",
-        args={"prompt": prompt.strip(), "working_directory": working_directory},
-        context=ctx,
-    )
+        task = engine.create_task(
+            command=f"{Agent.AICHAT.value}_exec",
+            args={"prompt": prompt.strip(), "working_directory": working_directory},
+            context=ctx,
+        )
 
-    task.async_task = asyncio.create_task(engine.run_agent(
-        task, aichat_runner, mode="exec",
-        prompt=prompt.strip(), working_directory=working_directory
-    ))
+        task.async_task = asyncio.create_task(engine.run_agent(
+            task, aichat_runner, mode="exec",
+            prompt=prompt.strip(), working_directory=working_directory
+        ))
 
-    model_info = f" ({config.aichat.model})" if config.aichat.model else ""
-    return TaskResponse(
-        success=True,
-        task_id=task.task_id,
-        status=task.status,
-        message=f"AiChat{model_info} session started. Use wait_for_task to get result.",
-    ).model_dump()
-
-
-@mcp.tool()
-async def resume_aichat_session(
-    ctx: Context[ServerSession, None],
-    prompt: str = Field(description="The question or request to send to the resumed session"),
-    session_id: str = Field(description="Session name to resume"),
-    working_directory: str | None = Field(default=None, description="Working directory for aichat context"),
-) -> dict:
-    """Resume an existing aichat session with full conversation history."""
-    if not prompt or not prompt.strip():
-        return TaskResponse(success=False, error="'prompt' parameter is required.", error_code=ErrorCode.INVALID_ARGS).model_dump()
-
-    if not session_id or not session_id.strip():
-        return TaskResponse(success=False, error="'session_id' parameter is required for aichat resume.", error_code=ErrorCode.INVALID_ARGS).model_dump()
-
-    working_directory, error = _validate_working_directory(working_directory)
-    if error:
-        return TaskResponse(success=False, error=error, error_code=ErrorCode.INVALID_ARGS).model_dump()
-
-    session_ref = session_id.strip()
-
-    # Validate session ID
-    if not aichat_runner.validate_session_id(session_ref):
+        model_info = f" ({config.aichat.model})" if config.aichat.model else ""
         return TaskResponse(
-            success=False,
-            error=f"Invalid session_id: '{session_id}' - contains disallowed characters",
-            error_code=ErrorCode.INVALID_ARGS
+            success=True,
+            task_id=task.task_id,
+            status=task.status,
+            message=f"AiChat{model_info} session started. Use wait_for_task to get result.",
         ).model_dump()
 
-    task = engine.create_task(
-        command=f"{Agent.AICHAT.value}_resume",
-        args={"session_id": session_ref, "prompt": prompt.strip(), "working_directory": working_directory},
-        context=ctx,
-    )
 
-    task.async_task = asyncio.create_task(engine.run_agent(
-        task, aichat_runner, mode="resume",
-        prompt=prompt.strip(), session_ref=session_ref, working_directory=working_directory
-    ))
+    @mcp.tool()
+    async def resume_aichat_session(
+        ctx: Context[ServerSession, None],
+        prompt: str = Field(description="The question or request to send to the resumed session"),
+        session_id: str = Field(description="Session name to resume"),
+        working_directory: str | None = Field(default=None, description="Working directory for aichat context"),
+    ) -> dict:
+        """Resume an existing aichat session with full conversation history."""
+        if not prompt or not prompt.strip():
+            return TaskResponse(success=False, error="'prompt' parameter is required.", error_code=ErrorCode.INVALID_ARGS).model_dump()
 
-    model_info = f" ({config.aichat.model})" if config.aichat.model else ""
-    return TaskResponse(
-        success=True,
-        task_id=task.task_id,
-        status=task.status,
-        message=f"AiChat{model_info} resume started for session {session_id}. Use wait_for_task to get result.",
-    ).model_dump()
+        if not session_id or not session_id.strip():
+            return TaskResponse(success=False, error="'session_id' parameter is required for aichat resume.", error_code=ErrorCode.INVALID_ARGS).model_dump()
+
+        working_directory, error = _validate_working_directory(working_directory)
+        if error:
+            return TaskResponse(success=False, error=error, error_code=ErrorCode.INVALID_ARGS).model_dump()
+
+        session_ref = session_id.strip()
+
+        # Validate session ID
+        if not aichat_runner.validate_session_id(session_ref):
+            return TaskResponse(
+                success=False,
+                error=f"Invalid session_id: '{session_id}' - contains disallowed characters",
+                error_code=ErrorCode.INVALID_ARGS
+            ).model_dump()
+
+        task = engine.create_task(
+            command=f"{Agent.AICHAT.value}_resume",
+            args={"session_id": session_ref, "prompt": prompt.strip(), "working_directory": working_directory},
+            context=ctx,
+        )
+
+        task.async_task = asyncio.create_task(engine.run_agent(
+            task, aichat_runner, mode="resume",
+            prompt=prompt.strip(), session_ref=session_ref, working_directory=working_directory
+        ))
+
+        model_info = f" ({config.aichat.model})" if config.aichat.model else ""
+        return TaskResponse(
+            success=True,
+            task_id=task.task_id,
+            status=task.status,
+            message=f"AiChat{model_info} resume started for session {session_id}. Use wait_for_task to get result.",
+        ).model_dump()
 
 
 # === Task Management Tools ===

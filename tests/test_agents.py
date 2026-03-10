@@ -485,6 +485,7 @@ class TestAiChatRunner:
         """Should build basic exec command."""
         with patch("owlex.agents.aichat.config") as mock_config:
             mock_config.aichat.model = None
+            mock_config.aichat.allow_env_credentials = False
 
             cmd = runner.build_exec_command(prompt="Hello")
 
@@ -498,6 +499,7 @@ class TestAiChatRunner:
         """Should add -m flag when model is configured."""
         with patch("owlex.agents.aichat.config") as mock_config:
             mock_config.aichat.model = "openai:gpt-4o"
+            mock_config.aichat.allow_env_credentials = False
 
             cmd = runner.build_exec_command(prompt="Hello")
 
@@ -509,6 +511,7 @@ class TestAiChatRunner:
         """Should not include -m flag when no model configured."""
         with patch("owlex.agents.aichat.config") as mock_config:
             mock_config.aichat.model = None
+            mock_config.aichat.allow_env_credentials = False
 
             cmd = runner.build_exec_command(prompt="Hello")
 
@@ -518,6 +521,7 @@ class TestAiChatRunner:
         """Should set cwd for working directory."""
         with patch("owlex.agents.aichat.config") as mock_config:
             mock_config.aichat.model = None
+            mock_config.aichat.allow_env_credentials = False
 
             cmd = runner.build_exec_command(
                 prompt="Hello",
@@ -530,6 +534,7 @@ class TestAiChatRunner:
         """Should generate a unique session name with owlex- prefix."""
         with patch("owlex.agents.aichat.config") as mock_config:
             mock_config.aichat.model = None
+            mock_config.aichat.allow_env_credentials = False
 
             cmd = runner.build_exec_command(prompt="Hello")
 
@@ -541,6 +546,7 @@ class TestAiChatRunner:
         """Should resume with the provided session name."""
         with patch("owlex.agents.aichat.config") as mock_config:
             mock_config.aichat.model = None
+            mock_config.aichat.allow_env_credentials = False
 
             cmd = runner.build_resume_command(
                 session_ref="owlex-abc123",
@@ -557,6 +563,7 @@ class TestAiChatRunner:
         """Should reject session_ref starting with dash to prevent flag injection."""
         with patch("owlex.agents.aichat.config") as mock_config:
             mock_config.aichat.model = None
+            mock_config.aichat.allow_env_credentials = False
 
             with pytest.raises(ValueError) as exc_info:
                 runner.build_resume_command(
@@ -570,6 +577,7 @@ class TestAiChatRunner:
         """Should include helpful installation hint."""
         with patch("owlex.agents.aichat.config") as mock_config:
             mock_config.aichat.model = None
+            mock_config.aichat.allow_env_credentials = False
 
             cmd = runner.build_exec_command(prompt="Hello")
 
@@ -580,12 +588,35 @@ class TestAiChatRunner:
         """Should use stdin to prevent prompts being parsed as flags."""
         with patch("owlex.agents.aichat.config") as mock_config:
             mock_config.aichat.model = None
+            mock_config.aichat.allow_env_credentials = False
 
             cmd = runner.build_exec_command(prompt="-malicious prompt")
 
             # Prompt should be passed via stdin, not in command
             assert "-malicious prompt" not in cmd.command
             assert cmd.prompt == "-malicious prompt"
+
+    def test_exec_sanitizes_credentials_by_default(self, runner):
+        """Should clear common credential env vars unless explicitly allowed."""
+        with patch("owlex.agents.aichat.config") as mock_config:
+            mock_config.aichat.model = None
+            mock_config.aichat.allow_env_credentials = False
+
+            cmd = runner.build_exec_command(prompt="Hello")
+
+            assert cmd.env_overrides is not None
+            assert cmd.env_overrides.get("OPENAI_API_KEY") == ""
+            assert cmd.env_overrides.get("OPENROUTER_API_KEY") == ""
+
+    def test_exec_allows_credentials_when_opted_in(self, runner):
+        """Should not override env when passthrough is explicitly enabled."""
+        with patch("owlex.agents.aichat.config") as mock_config:
+            mock_config.aichat.model = None
+            mock_config.aichat.allow_env_credentials = True
+
+            cmd = runner.build_exec_command(prompt="Hello")
+
+            assert cmd.env_overrides is None
 
 
 class TestAgentInterface:

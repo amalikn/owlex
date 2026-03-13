@@ -47,7 +47,7 @@ Path placeholders used in this section:
 
 - `<MCP_STUFF_ROOT>` (example: `/Volumes/Data/_ai/_mcp/mcp_stuff`)
 - `<MCP_BASE>` (example: `/Volumes/Data/_ai/_mcp`)
-- `<MCP_DATA_ROOT>` (example: `/Volumes/Data/_ai/mcp-data`)
+- `<MCP_DATA_ROOT>` (example: `/Volumes/Data/_ai/_mcp/mcp-data`)
 
 Use this baseline for local environments where MCP repos live under `<MCP_BASE>` and persistent MCP data lives under `<MCP_DATA_ROOT>`.
 
@@ -243,3 +243,14 @@ Council runs in the background. Start a query, keep working, check results later
 | **ClaudeOR** | Claude Code + OpenRouter (DeepSeek, GPT-4o, etc.) |
 | **AiChat** | Multi-provider (20+ backends), bring-your-own-model flexibility |
 | **Claude** | Complex multi-step implementation, synthesis |
+
+## Local Customization Tracking
+- Local machine-specific integration, client wiring, and operational state are tracked under the external data root.
+- Local metadata path: `/Volumes/Data/_ai/_mcp/mcp-data/<name>/meta`
+- Repo-side capability contract is in `docs/local-capability/`.
+- Secrets are never stored in repo docs; only variable names and loading locations are documented.
+
+## Local Enhancements Capture (2026-03-13)
+- Captured current local changes, configuration updates, and operational enhancements for GitHub publication.
+- Includes synchronization with sub-repo link updates where applicable.
+- Cross-reference local docs and capability notes added in this repository.
